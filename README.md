@@ -1,8 +1,24 @@
 # 🔍 Semantic Plagiarism Detection System
 
 A production-ready NLP application that detects **semantic plagiarism** in student
-assignments—even when text has been paraphrased—using Sentence Transformers and
-cosine similarity.
+assignments—even when text has been paraphrased—using Sentence Transformers, cosine
+similarity, and **FAISS vector search**.
+
+---
+
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](screenshots/screenshot_1_dashboard.png)
+
+### Plagiarism Warnings
+![Warnings](screenshots/screenshot_2_warnings.png)
+
+### Similarity Heatmap
+![Heatmap](screenshots/screenshot_3_heatmap.png)
+
+### FAISS Chunk Search
+![FAISS](screenshots/screenshot_4_faiss.png)
 
 ---
 
@@ -12,10 +28,12 @@ cosine similarity.
 |---|---|
 | **Semantic understanding** | Detects paraphrased plagiarism, not just copy-paste |
 | **Transformer embeddings** | `all-MiniLM-L6-v2` (384-dim, fast, accurate) |
+| **FAISS vector search** | O(log N) chunk-level search — scales to thousands of assignments |
 | **Paragraph chunking** | Detects localised section-level plagiarism |
 | **Similarity matrix** | Full N×N pairwise document comparison |
 | **Heatmap visualisation** | Green–Red heatmap with flagged-pair borders |
 | **Pair drill-down** | See exactly which paragraphs match |
+| **Custom text query** | Paste any snippet to search against all uploaded assignments |
 | **Streamlit dashboard** | Clean, teacher-friendly web interface |
 | **Configurable threshold** | Adjustable via sidebar slider (default 0.75) |
 
@@ -33,14 +51,14 @@ cosine similarity.
               │                  Processing Pipeline                │
               │                                                     │
               │  PDF Upload → Text Extraction → Paragraph Chunking  │
-              │         → Embedding → Similarity → Flagging         │
-              └──────────────────────────────────────────────────── ┘
-                    │           │           │         │        │
-              ┌─────▼──┐  ┌────▼───┐  ┌────▼───┐ ┌──▼─────┐ ┌▼───────┐
-              │pdf_    │  │text_   │  │embed-  │ │simila- │ │heat-   │
-              │reader  │  │chunking│  │ding_   │ │rity.py │ │map.py  │
-              │.py     │  │.py     │  │model.py│ │        │ │        │
-              └────────┘  └────────┘  └────────┘ └────────┘ └────────┘
+              │    → Embedding → FAISS Index → Similarity → Flags   │
+              └─────────────────────────────────────────────────────┘
+                    │         │          │         │        │       │
+              ┌─────▼──┐ ┌───▼────┐ ┌───▼────┐ ┌──▼────┐ ┌▼─────┐ ┌▼──────┐
+              │pdf_    │ │text_   │ │embed-  │ │faiss_ │ │simi- │ │heat-  │
+              │reader  │ │chunking│ │ding_   │ │index  │ │larity│ │map.py │
+              │.py     │ │.py     │ │model.py│ │.py    │ │.py   │ │       │
+              └────────┘ └────────┘ └────────┘ └───────┘ └──────┘ └───────┘
 ```
 
 ### Module Responsibilities
@@ -50,9 +68,10 @@ cosine similarity.
 | `utils/pdf_reader.py` | Extract raw text from PDFs via PyPDF2 |
 | `utils/text_chunking.py` | Split text into paragraph chunks (20–200 words) |
 | `utils/embedding_model.py` | Generate L2-normalised embeddings via SentenceTransformers |
+| `utils/faiss_index.py` | Build FAISS index; chunk-level ANN search across all documents |
 | `utils/similarity.py` | Compute cosine similarity matrices; flag plagiarism |
 | `utils/heatmap.py` | Render Seaborn heatmaps (document-level & chunk-level) |
-| `app/streamlit_app.py` | Streamlit UI: upload, display, drill-down |
+| `app/streamlit_app.py` | Streamlit UI: upload, warnings, FAISS search, heatmap, drill-down |
 
 ---
 
@@ -62,15 +81,17 @@ cosine similarity.
 semantic_plagiarism_detector/
 │
 ├── utils/
-│   ├── __init__.py          # Package exports
-│   ├── pdf_reader.py        # PDF text extraction
-│   ├── text_chunking.py     # Paragraph-level chunking
-│   ├── embedding_model.py   # Sentence Transformer wrapper
-│   ├── similarity.py        # Cosine similarity & plagiarism flagging
-│   └── heatmap.py           # Matplotlib/Seaborn visualisations
+│   ├── __init__.py           # Package exports
+│   ├── pdf_reader.py         # PDF text extraction
+│   ├── text_chunking.py      # Paragraph-level chunking
+│   ├── embedding_model.py    # Sentence Transformer wrapper
+│   ├── faiss_index.py        # FAISS vector index & ANN search
+│   ├── similarity.py         # Cosine similarity & plagiarism flagging
+│   └── heatmap.py            # Matplotlib/Seaborn visualisations
 │
 ├── app/
-│   └── streamlit_app.py     # Main web dashboard
+│   ├── __init__.py
+│   └── streamlit_app.py      # Main web dashboard (5 tabs)
 │
 ├── requirements.txt
 └── README.md
@@ -113,15 +134,15 @@ The app opens at **http://localhost:8501**.
 
 ---
 
-## 🖥️ Dashboard Usage
+## 🖥️ Dashboard — 5 Tabs
 
-1. **Upload PDFs** – Use the file uploader to add 2–20 student assignment PDFs.
-2. **Wait for processing** – Text extraction, chunking, and embedding happen automatically (cached after first run).
-3. **⚠️ Plagiarism Warnings tab** – See all flagged pairs sorted by severity.
-4. **📋 Similarity Matrix tab** – View the full N×N similarity table; download as CSV.
-5. **🗺️ Heatmap tab** – Visual overview; download as PNG.
-6. **🔬 Pair Drill-Down tab** – Select any two documents to see which paragraphs are most similar.
-7. **Adjust threshold** – Use the sidebar slider to tighten or loosen detection sensitivity.
+| Tab | What it shows |
+|---|---|
+| **Plagiarism Warnings** | All flagged pairs sorted by severity (High / Medium) |
+| **FAISS Chunk Search** | Chunk-level ANN search across all documents; custom text query box |
+| **Similarity Matrix** | Full N×N similarity table; downloadable as CSV |
+| **Heatmap** | Visual colour matrix with red borders on flagged pairs; downloadable PNG |
+| **Pair Drill-Down** | Select any two docs to see which specific paragraphs match |
 
 ---
 
@@ -130,6 +151,7 @@ The app opens at **http://localhost:8501**.
 | Setting | Default | Description |
 |---|---|---|
 | Plagiarism threshold | `0.75` | Pairs above this score are flagged |
+| FAISS matches per chunk | `5` | Nearest neighbours retrieved per chunk |
 | Chunk min words | `20` | Paragraphs shorter than this are discarded |
 | Chunk max words | `200` | Longer paragraphs are sub-split at sentence boundaries |
 | Embedding model | `all-MiniLM-L6-v2` | Change in `utils/embedding_model.py` |
@@ -137,58 +159,64 @@ The app opens at **http://localhost:8501**.
 
 ---
 
-## 🧠 How Semantic Detection Works
+## 🧠 How It Works
 
 ### Step 1 – Text Extraction
-PyPDF2 reads each PDF page and concatenates text.
+PyPDF2 reads each PDF page and concatenates the text.
 
 ### Step 2 – Paragraph Chunking
-Text is split on blank lines into paragraph chunks (20–200 words).
-Chunks shorter than 20 words (headers, captions) are discarded.
-Overly long chunks are sub-split at sentence boundaries.
+Text is split on blank lines into chunks of 20–200 words.
+Short chunks (headers, captions) are discarded; long chunks are sub-split at sentence boundaries.
 
 ### Step 3 – Embedding
 Each chunk is passed through `all-MiniLM-L6-v2`:
-- Output: 384-dimensional L2-normalised vector per chunk
+- Output: 384-dimensional, L2-normalised vector
 - L2 normalisation means cosine similarity = dot product (fast)
 
-### Step 4 – Similarity Computation
-**Document-level:** Each document → mean of its chunk embeddings → cosine similarity matrix  
-**Chunk-level (optional):** Maximum pairwise chunk similarity → catches partial plagiarism
+### Step 4 – FAISS Index
+All chunk vectors are added to a `faiss.IndexFlatIP` (exact inner product search).
+- **O(log N)** query time per chunk vs **O(N²)** for brute-force pairwise comparison
+- Scales comfortably to tens of thousands of assignments
+- For 100k+ chunks, swap to `IndexIVFFlat` (see comment in `faiss_index.py`)
 
-### Step 5 – Flagging
-Pairs with similarity ≥ threshold are flagged:
-- 🔴 **High**: ≥ 0.90
-- 🟡 **Medium**: ≥ 0.75 (default threshold)
+### Step 5 – Similarity Computation
+- **Document-level:** mean-pooled chunk embeddings → cosine similarity matrix
+- **Chunk-level:** FAISS ANN search → max similarity per chunk pair
+
+### Step 6 – Flagging
+Pairs with similarity >= threshold are flagged:
+- **High**: >= 0.90
+- **Medium**: >= 0.75 (default)
 
 ### Why semantic similarity catches paraphrasing
-The model encodes **meaning** rather than surface text:
-> "The quick brown fox jumped over the lazy dog."  
+The model encodes **meaning**, not surface words:
+> "The quick brown fox jumped over the lazy dog."
 > "A nimble auburn canine leapt above a lethargic hound."
 
-Both produce very similar embeddings because the semantic content is identical.
+Both sentences produce nearly identical embeddings because the semantic content is the same.
 
 ---
 
-## 📊 Performance Notes
+## 📊 Performance
 
 | Scenario | Expected time |
 |---|---|
-| First load (model download) | ~30–60 s (once) |
+| First load (model download) | ~30–60 s (once only) |
 | 5 documents, CPU | ~10–15 s |
 | 10 documents, CPU | ~20–30 s |
 | 10 documents, GPU | ~5–8 s |
+| 1000 documents, FAISS | Feasible — O(log N) search |
 
-Results are **cached by Streamlit**, so re-uploads of the same files are instant.
+Results are **cached by Streamlit** — re-uploading the same files is instant.
 
 ---
 
 ## 🔒 Privacy & Ethics
 
-- All processing runs **locally**; no data is sent to external servers.
+- All processing runs **locally**; no data leaves your machine.
 - This tool is an **aid** for academic review, not a final verdict.
 - A high similarity score should prompt **manual review**, not automatic sanctions.
-- Consider informing students that their work will be checked.
+- Consider informing students that submitted work will be checked.
 
 ---
 
@@ -197,6 +225,7 @@ Results are **cached by Streamlit**, so re-uploads of the same files are instant
 | Library | Purpose |
 |---|---|
 | `sentence-transformers` | Pre-trained transformer embeddings |
+| `faiss-cpu` | Approximate nearest-neighbour vector search |
 | `PyPDF2` | PDF text extraction |
 | `streamlit` | Web dashboard |
 | `numpy` | Numerical operations |
