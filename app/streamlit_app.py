@@ -167,7 +167,8 @@ with tab_faiss:
     st.subheader("⚡ FAISS Vector Search — Chunk-Level Plagiarism")
     st.markdown(
         "FAISS searches **every chunk** against all other documents' chunks. "
-        "Scales to thousands of assignments — each query is **O(log N)** not O(N²)."
+        "Uses exact search for small collections and **IVF approximate search** "
+        "for large ones — scaling to thousands of assignments."
     )
 
     faiss_col1, faiss_col2 = st.columns([2, 1])

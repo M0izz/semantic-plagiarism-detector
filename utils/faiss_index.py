@@ -1,29 +1,31 @@
 """
 faiss_index.py
 --------------
-Builds and queries a FAISS flat index over all document chunk embeddings.
+Builds and queries a FAISS index over all document chunk embeddings.
 
 Why FAISS?
 ----------
 Pairwise cosine similarity is O(N²) — fine for 10 documents, painful for 1000+.
-FAISS performs approximate nearest-neighbour (ANN) search in O(N log N),
-making it practical for thousands of assignments.
+FAISS offers multiple index types for different scale requirements:
 
-Index type used: IndexFlatIP (exact inner product search)
-  - Since embeddings are L2-normalised, inner product == cosine similarity.
-  - "Flat" means exact (no approximation), safe for academic use cases.
-  - For 100k+ chunks, swap to IndexIVFFlat for speed (see comment in build_index).
+Index types available:
+  - IndexFlatIP  : Exact inner product (brute-force). O(N) per query.
+                   Best for < 10k vectors. No approximation error.
+  - IndexIVFFlat : Inverted-file index with Voronoi cells. O(N/nlist × nprobe)
+                   per query — significantly faster at scale.  Requires training.
+                   Best for 10k–10M vectors.
+
+Since embeddings are L2-normalised in embedding_model.py,
+inner product == cosine similarity.
 """
 
-"""
-faiss_index.py
---------------
-Builds and queries a FAISS flat index over all document chunk embeddings.
-"""
 # FAISS has no official type stubs; suppress Pylance false positives
 import faiss  # type: ignore
 import numpy as np
 from typing import Dict, List, Tuple, Optional
+
+# ── Threshold for automatic index selection ────────────────────────────────────
+_IVF_THRESHOLD = 5_000   # Switch from flat to IVF when vectors exceed this
 
 
 class ChunkRecord:
@@ -43,7 +45,27 @@ class ChunkRecord:
 def build_index(
     embeddings:   Dict[str, np.ndarray],
     chunked_docs: Dict[str, List[str]],
+    index_type:   str = "auto",
+    nlist:        Optional[int] = None,
+    nprobe:       int = 10,
 ) -> Tuple[faiss.Index, List[ChunkRecord]]:
+    """
+    Build a FAISS index over all chunk embeddings.
+
+    Args:
+        embeddings:   Dict mapping doc name → embedding array (chunks × 384).
+        chunked_docs: Dict mapping doc name → list of chunk strings.
+        index_type:   Index selection strategy:
+                        'flat' — IndexFlatIP (exact, O(N) per query)
+                        'ivf'  — IndexIVFFlat (approximate, faster at scale)
+                        'auto' — flat if < 5k vectors, IVF if >= 5k (default)
+        nlist:        Number of Voronoi cells for IVF (auto-sized if None).
+        nprobe:       Number of cells to visit at query time for IVF (default 10).
+
+    Returns:
+        (index, registry) — the FAISS index and a list mapping each vector
+        position to its source ChunkRecord.
+    """
     dim = 384
     all_vectors: List[np.ndarray] = []
     registry:    List[ChunkRecord] = []
@@ -59,9 +81,32 @@ def build_index(
     if not all_vectors:
         return faiss.IndexFlatIP(dim), registry
 
-    matrix = np.vstack(all_vectors)
-    index  = faiss.IndexFlatIP(dim)
-    index.add(matrix)  # type: ignore[arg-type]
+    matrix   = np.vstack(all_vectors)
+    n_vectors = matrix.shape[0]
+
+    # ── Resolve index type ────────────────────────────────────────────────────
+    if index_type == "auto":
+        index_type = "ivf" if n_vectors >= _IVF_THRESHOLD else "flat"
+
+    if index_type == "ivf":
+        # IVF requires nlist <= n_vectors; auto-size using sqrt heuristic
+        if nlist is None:
+            nlist = max(4, int(np.sqrt(n_vectors)))
+        nlist = min(nlist, n_vectors)
+
+        quantizer = faiss.IndexFlatIP(dim)
+        index = faiss.IndexIVFFlat(quantizer, dim, nlist, faiss.METRIC_INNER_PRODUCT)
+        index.train(matrix)          # type: ignore[arg-type]
+        index.add(matrix)            # type: ignore[arg-type]
+        index.nprobe = nprobe
+        print(f"[faiss_index] Built IndexIVFFlat  "
+              f"({n_vectors} vectors, nlist={nlist}, nprobe={nprobe})")
+    else:
+        # Flat index — exact search, best for small-to-medium collections
+        index = faiss.IndexFlatIP(dim)
+        index.add(matrix)            # type: ignore[arg-type]
+        print(f"[faiss_index] Built IndexFlatIP  ({n_vectors} vectors, exact search)")
+
     return index, registry
 
 
@@ -73,6 +118,20 @@ def search_similar_chunks(
     exclude_doc:     Optional[str] = None,
     threshold:       float = 0.0,
 ) -> List[Tuple[ChunkRecord, float]]:
+    """
+    Search the FAISS index for the most similar chunks to a query vector.
+
+    Args:
+        query_embedding: 1-D embedding vector (384,).
+        index:           FAISS index built by build_index().
+        registry:        ChunkRecord list built by build_index().
+        top_k:           Number of results to return.
+        exclude_doc:     Skip results from this document (for cross-doc search).
+        threshold:       Minimum similarity score to include.
+
+    Returns:
+        List of (ChunkRecord, similarity_score) tuples, descending by score.
+    """
     vec     = query_embedding.astype("float32").reshape(1, -1)
     fetch_k = min(top_k * 3, index.ntotal) if exclude_doc else top_k
     fetch_k = max(fetch_k, 1)
@@ -103,6 +162,16 @@ def find_plagiarised_chunks(
     threshold:    float = 0.75,
     top_k:        int = 5,
 ) -> List[Dict]:
+    """
+    Search every chunk against the FAISS index to find cross-document matches.
+
+    For each chunk, queries the index for nearest neighbours in other documents.
+    Deduplicates symmetric pairs so (A,B) and (B,A) appear only once.
+
+    Returns:
+        List of match dicts sorted by similarity descending, each containing:
+        source_doc, source_chunk_text, match_doc, match_chunk_text, similarity.
+    """
     matches    = []
     seen_pairs = set()
 
@@ -139,11 +208,13 @@ def find_plagiarised_chunks(
 
 
 def save_index(index: faiss.Index, path: str) -> None:
+    """Persist a FAISS index to disk."""
     faiss.write_index(index, path)
     print(f"[faiss_index] Index saved → {path}  ({index.ntotal} vectors)")
 
 
 def load_index(path: str) -> faiss.Index:
+    """Load a FAISS index from disk."""
     index = faiss.read_index(path)
     print(f"[faiss_index] Index loaded ← {path}  ({index.ntotal} vectors)")
     return index

@@ -26,7 +26,7 @@ similarity, and **FAISS vector search**.
 |---|---|
 | **Semantic understanding** | Detects paraphrased plagiarism, not just copy-paste |
 | **Transformer embeddings** | `all-MiniLM-L6-v2` (384-dim, fast, accurate) |
-| **FAISS vector search** | O(log N) chunk-level search — scales to thousands of assignments |
+| **FAISS vector search** | Adaptive indexing (Flat / IVF) — scales to thousands of assignments |
 | **Paragraph chunking** | Detects localised section-level plagiarism |
 | **Similarity matrix** | Full N×N pairwise document comparison |
 | **Heatmap visualisation** | Green–Red heatmap with flagged-pair borders |
@@ -66,7 +66,7 @@ similarity, and **FAISS vector search**.
 | `utils/pdf_reader.py` | Extract raw text from PDFs via PyPDF2 |
 | `utils/text_chunking.py` | Split text into paragraph chunks (20–200 words) |
 | `utils/embedding_model.py` | Generate L2-normalised embeddings via SentenceTransformers |
-| `utils/faiss_index.py` | Build FAISS index; chunk-level ANN search across all documents |
+| `utils/faiss_index.py` | Build FAISS index (Flat/IVF); chunk-level search across all documents |
 | `utils/similarity.py` | Compute cosine similarity matrices; flag plagiarism |
 | `utils/heatmap.py` | Render Seaborn heatmaps (document-level & chunk-level) |
 | `app/streamlit_app.py` | Streamlit UI: upload, warnings, FAISS search, heatmap, drill-down |
@@ -83,14 +83,19 @@ semantic_plagiarism_detector/
 │   ├── pdf_reader.py         # PDF text extraction
 │   ├── text_chunking.py      # Paragraph-level chunking
 │   ├── embedding_model.py    # Sentence Transformer wrapper
-│   ├── faiss_index.py        # FAISS vector index & ANN search
+│   ├── faiss_index.py        # FAISS vector index (Flat / IVF)
 │   ├── similarity.py         # Cosine similarity & plagiarism flagging
 │   └── heatmap.py            # Matplotlib/Seaborn visualisations
 │
 ├── app/
-│   ├── __init__.py
 │   └── streamlit_app.py      # Main web dashboard (5 tabs)
 │
+├── evaluation/
+│   ├── benchmark_dataset.json  # 25 labelled text pairs
+│   ├── evaluate.py             # Precision/recall/F1 + ROC curves
+│   └── results/                # Generated plots & metrics (gitignored)
+│
+├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
@@ -172,10 +177,12 @@ Each chunk is passed through `all-MiniLM-L6-v2`:
 - L2 normalisation means cosine similarity = dot product (fast)
 
 ### Step 4 – FAISS Index
-All chunk vectors are added to a `faiss.IndexFlatIP` (exact inner product search).
-- **O(log N)** query time per chunk vs **O(N²)** for brute-force pairwise comparison
-- Scales comfortably to tens of thousands of assignments
-- For 100k+ chunks, swap to `IndexIVFFlat` (see comment in `faiss_index.py`)
+All chunk vectors are added to a FAISS index. The system automatically selects the
+best index type based on collection size:
+- **< 5 000 vectors → `IndexFlatIP`** (exact inner-product search, O(N) per query)
+- **≥ 5 000 vectors → `IndexIVFFlat`** (inverted-file approximate search, sub-linear per query)
+
+Since embeddings are L2-normalised, inner product equals cosine similarity.
 
 ### Step 5 – Similarity Computation
 - **Document-level:** mean-pooled chunk embeddings → cosine similarity matrix
@@ -203,7 +210,7 @@ Both sentences produce nearly identical embeddings because the semantic content 
 | 5 documents, CPU | ~10–15 s |
 | 10 documents, CPU | ~20–30 s |
 | 10 documents, GPU | ~5–8 s |
-| 1000 documents, FAISS | Feasible — O(log N) search |
+| 1000 documents, FAISS | Feasible — auto-switches to IVF index |
 
 Results are **cached by Streamlit** — re-uploading the same files is instant.
 
@@ -223,7 +230,7 @@ Results are **cached by Streamlit** — re-uploading the same files is instant.
 | Library | Purpose |
 |---|---|
 | `sentence-transformers` | Pre-trained transformer embeddings |
-| `faiss-cpu` | Approximate nearest-neighbour vector search |
+| `faiss-cpu` | Vector search (exact / approximate nearest-neighbour) |
 | `PyPDF2` | PDF text extraction |
 | `streamlit` | Web dashboard |
 | `numpy` | Numerical operations |
@@ -231,6 +238,52 @@ Results are **cached by Streamlit** — re-uploading the same files is instant.
 | `scikit-learn` | `cosine_similarity` utility |
 | `seaborn` | Heatmap styling |
 | `matplotlib` | Figure rendering |
+
+---
+
+## 📊 Evaluation & Benchmarks
+
+The system is evaluated on a **25-pair benchmark dataset** covering heavy paraphrases,
+light paraphrases, same-topic originals, and different-topic negatives.
+
+Run the evaluation yourself:
+
+```bash
+python -m evaluation.evaluate
+```
+
+Results are saved to `evaluation/results/` and include:
+
+| Output | Description |
+|---|---|
+| `metrics.json` | Precision, recall, F1, ROC-AUC at optimal threshold |
+| `threshold_sweep_semantic.csv` | Metrics at every threshold (0.30 – 0.95) |
+| `roc_curve.png` | ROC curve — Semantic vs TF-IDF baseline |
+| `pr_curve.png` | Precision-Recall curve |
+| `similarity_distribution.png` | Score histograms by label |
+
+### Benchmark Results
+
+Evaluated on 25 text pairs (10 plagiarized, 15 not plagiarized):
+
+| Metric | Sentence Transformers | TF-IDF Baseline | Δ |
+|---|---|---|---|
+| **ROC-AUC** | **1.000** | 0.973 | +0.027 |
+| **Best F1** | **1.000** | 0.667 | +0.333 |
+| Precision | 1.000 | 1.000 | — |
+| Recall | **1.000** | 0.500 | +0.500 |
+| Accuracy | **1.000** | 0.800 | +0.200 |
+| Optimal Threshold | 0.59 | 0.30 | — |
+
+**Key finding:** TF-IDF misses **all 5 heavy paraphrases** (scoring 0.18–0.27) while
+Sentence Transformers correctly flags them (scoring 0.60–0.82). Light paraphrases are
+detected by both, but the semantic model provides much stronger signal separation.
+
+### Why semantic beats lexical
+
+The TF-IDF baseline relies on exact word overlap — it fails when students paraphrase.
+Sentence Transformers encode **meaning**, catching paraphrases that surface-level
+methods miss entirely.
 
 ---
 

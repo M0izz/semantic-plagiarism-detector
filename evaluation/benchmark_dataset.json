@@ -1,0 +1,211 @@
+{
+  "name": "Semantic Plagiarism Detection — Evaluation Benchmark",
+  "version": "1.0",
+  "description": "25 text pairs with ground-truth labels for evaluating plagiarism detection accuracy. Covers heavy paraphrase, light paraphrase, same-topic originals, and different-topic negatives.",
+  "label_schema": {
+    "plagiarized": "The two texts convey the same core ideas/arguments; one is derived from the other.",
+    "not_plagiarized": "The two texts are independently authored, even if they share a broad topic."
+  },
+  "pairs": [
+    {
+      "id": "HP-01",
+      "category": "heavy_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Machine learning is a subset of artificial intelligence that enables computers to learn from data without being explicitly programmed. Algorithms identify patterns in training data and use those patterns to make predictions on new, unseen examples. The performance of these models typically improves as more data becomes available, making data collection a critical step in any ML pipeline.",
+      "text_b": "A branch of AI known as machine learning allows computer systems to automatically improve through experience. Rather than following hard-coded rules, ML algorithms discover statistical regularities in datasets and leverage them to forecast outcomes for previously unencountered inputs. Because model accuracy generally scales with dataset size, gathering sufficient training examples is one of the most important phases of building an ML system.",
+      "notes": "Same three ideas restructured with entirely different vocabulary."
+    },
+    {
+      "id": "HP-02",
+      "category": "heavy_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Neural networks consist of layers of interconnected nodes that transform input data through weighted connections. During training, the network adjusts these weights using backpropagation, minimizing a loss function that measures the gap between predictions and ground truth. Deep networks with many hidden layers can learn hierarchical feature representations automatically.",
+      "text_b": "Artificial neural networks are composed of multiple tiers of processing units linked by adjustable parameters. The learning procedure involves propagating error signals backward through the architecture to update connection strengths, thereby reducing the discrepancy between the model output and the desired target. Architectures containing numerous intermediate layers are capable of extracting multi-level abstract features without manual engineering.",
+      "notes": "Technical content about neural networks, completely reworded."
+    },
+    {
+      "id": "HP-03",
+      "category": "heavy_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Database normalization is the process of organizing tables to reduce data redundancy and improve data integrity. The first normal form requires that each column contains only atomic values, while second normal form eliminates partial dependencies on composite keys. Third normal form goes further by removing transitive dependencies between non-key attributes.",
+      "text_b": "The technique of structuring relational tables to minimize duplication and strengthen consistency is called normalization. To satisfy 1NF, every field must hold a single indivisible value. Achieving 2NF demands that no non-key column depends on just part of a multi-column primary key. Advancing to 3NF requires eliminating any indirect dependency where a non-key attribute determines another non-key attribute.",
+      "notes": "Database normalization explained with different wording and sentence structure."
+    },
+    {
+      "id": "HP-04",
+      "category": "heavy_paraphrase",
+      "label": "plagiarized",
+      "text_a": "The TCP three-way handshake establishes a reliable connection between client and server. First, the client sends a SYN packet to the server. The server responds with a SYN-ACK packet, acknowledging the request. Finally, the client sends an ACK packet, and the connection is established. This mechanism ensures both parties are ready to communicate before data transfer begins.",
+      "text_b": "Reliable transport connections in TCP are initiated through a three-step negotiation process. The initiating host transmits a synchronization segment to the receiving host, which replies with a combined synchronization and acknowledgment segment. The initiating host then confirms with an acknowledgment segment, completing the setup. This handshake protocol guarantees mutual readiness before any application data is exchanged.",
+      "notes": "TCP handshake described with entirely different terminology."
+    },
+    {
+      "id": "HP-05",
+      "category": "heavy_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Encryption transforms plaintext into ciphertext using mathematical algorithms and keys. Symmetric encryption uses the same key for both encryption and decryption, making it fast but requiring secure key distribution. Asymmetric encryption uses a public-private key pair, solving the key distribution problem but at the cost of slower computation due to complex mathematical operations.",
+      "text_b": "Cryptographic methods convert readable data into an unintelligible form through algorithmic transformations governed by secret parameters. In symmetric schemes, a single shared secret handles both encoding and decoding, offering speed advantages but creating the challenge of safely exchanging that secret. Public-key cryptography addresses this challenge by employing two mathematically related keys, though the computational overhead is significantly higher due to the underlying number-theoretic operations.",
+      "notes": "Encryption concepts restructured with formal academic language."
+    },
+    {
+      "id": "LP-01",
+      "category": "light_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Sorting algorithms are fundamental to computer science and are used extensively in practice. QuickSort works by selecting a pivot element and partitioning the array into elements less than and greater than the pivot. It has an average time complexity of O(n log n) but can degrade to O(n squared) in the worst case when the pivot selection is poor.",
+      "text_b": "Sorting algorithms are essential in computer science and are widely used in real-world applications. QuickSort operates by choosing a pivot element and dividing the array into elements smaller than and larger than the pivot. It has an average-case time complexity of O(n log n) but may degrade to O(n squared) in the worst case when the pivot choice is suboptimal.",
+      "notes": "Minor synonym substitutions, same structure preserved."
+    },
+    {
+      "id": "LP-02",
+      "category": "light_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Cloud computing provides on-demand access to computing resources such as servers, storage, and databases over the internet. It eliminates the need for organizations to maintain physical infrastructure, reducing capital expenditure. The three primary service models are Infrastructure as a Service, Platform as a Service, and Software as a Service, each offering different levels of control and abstraction.",
+      "text_b": "Cloud computing offers on-demand access to computing resources including servers, storage, and databases through the internet. It removes the requirement for organizations to manage physical infrastructure, lowering capital costs. The three main service models are IaaS, PaaS, and SaaS, each providing varying degrees of control and abstraction to users.",
+      "notes": "Very light paraphrase with abbreviation substitution."
+    },
+    {
+      "id": "LP-03",
+      "category": "light_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Version control systems track changes to source code over time, allowing developers to collaborate effectively. Git is the most popular distributed version control system, where each developer has a complete copy of the repository. Branching and merging enable parallel development workflows, and platforms like GitHub provide additional features such as pull requests and issue tracking.",
+      "text_b": "Version control systems monitor modifications to source code across time, enabling developers to work together efficiently. Git is the most widely used distributed version control system, in which every developer maintains a full copy of the repository. Branching and merging support parallel development workflows, and platforms such as GitHub offer additional capabilities like pull requests and issue tracking.",
+      "notes": "Synonym-level changes only."
+    },
+    {
+      "id": "LP-04",
+      "category": "light_paraphrase",
+      "label": "plagiarized",
+      "text_a": "Convolutional neural networks are specifically designed for processing grid-structured data like images. They use convolutional layers that apply learnable filters to detect features such as edges, textures, and shapes. Pooling layers reduce the spatial dimensions, and fully connected layers at the end perform the final classification. CNNs have revolutionized computer vision tasks including object detection and image segmentation.",
+      "text_b": "Convolutional neural networks are particularly designed for handling grid-structured data such as images. They employ convolutional layers that apply trainable filters to identify features like edges, textures, and shapes. Pooling layers decrease the spatial dimensions, and fully connected layers at the output perform the final classification task. CNNs have transformed computer vision applications including object detection and image segmentation.",
+      "notes": "Near-identical with minor word swaps."
+    },
+    {
+      "id": "LP-05",
+      "category": "light_paraphrase",
+      "label": "plagiarized",
+      "text_a": "The agile software development methodology emphasizes iterative development, continuous feedback, and adaptive planning. Scrum is one of the most widely adopted agile frameworks, organizing work into fixed-length iterations called sprints. Daily standup meetings, sprint reviews, and retrospectives provide regular opportunities for teams to inspect progress and adapt their approach based on new insights.",
+      "text_b": "The agile approach to software development focuses on iterative development, ongoing feedback, and flexible planning. Scrum is among the most commonly used agile frameworks, structuring work into fixed-duration iterations known as sprints. Daily standup meetings, sprint reviews, and retrospectives offer frequent chances for teams to examine progress and adjust their methods based on newly gained insights.",
+      "notes": "Light paraphrase with structure preserved."
+    },
+    {
+      "id": "ST-01",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Machine learning models can be broadly categorized into supervised, unsupervised, and reinforcement learning. Supervised learning trains on labeled datasets where the correct output is known, while unsupervised learning discovers hidden patterns in unlabeled data. Reinforcement learning takes a different approach, where agents learn optimal behavior through trial and error in an environment.",
+      "text_b": "The bias-variance tradeoff is a central concept in machine learning that affects model generalization. Models with high bias make strong assumptions about the data and tend to underfit, while models with high variance are overly sensitive to training data and overfit. Regularization techniques like L1 and L2 penalties help control this tradeoff by constraining model complexity.",
+      "notes": "Both about ML but covering completely different aspects."
+    },
+    {
+      "id": "ST-02",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "SQL databases use a structured schema with tables, rows, and columns to store data. They enforce ACID properties — atomicity, consistency, isolation, and durability — to ensure reliable transactions. SQL databases excel at handling complex queries involving multiple joins across normalized tables and are ideal for applications requiring strong data consistency.",
+      "text_b": "NoSQL databases emerged to address scalability limitations of traditional relational systems. Document stores like MongoDB use flexible JSON-like schemas that can evolve without migrations. Key-value stores such as Redis provide extremely fast lookups for caching scenarios. Graph databases like Neo4j efficiently model and traverse highly connected data such as social networks.",
+      "notes": "Both about databases but SQL vs NoSQL — genuinely different content."
+    },
+    {
+      "id": "ST-03",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "The HTTP protocol operates on a request-response model where clients send requests to servers. Each request includes a method such as GET, POST, PUT, or DELETE, along with headers and an optional body. The server processes the request and returns a status code indicating success, redirection, or error, along with the response payload.",
+      "text_b": "WebSocket is a communication protocol that provides full-duplex channels over a single TCP connection. Unlike HTTP, WebSocket allows both client and server to send data independently without waiting for a request. This makes it ideal for real-time applications such as chat systems, live notifications, and multiplayer games where low latency is essential.",
+      "notes": "Both about web protocols but HTTP vs WebSocket."
+    },
+    {
+      "id": "ST-04",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Public key infrastructure relies on certificate authorities to establish trust in digital communications. When a website presents an SSL certificate signed by a trusted CA, the browser can verify the server's identity. The certificate chain extends from the end-entity certificate through intermediate CAs up to a root CA that is pre-installed in the operating system.",
+      "text_b": "Penetration testing is a security practice where authorized professionals simulate cyberattacks to identify vulnerabilities. Testers use tools like Nmap for network scanning, Burp Suite for web application testing, and Metasploit for exploitation. The findings are documented in a detailed report with severity ratings and remediation recommendations for the organization's security team.",
+      "notes": "Both cybersecurity but PKI vs penetration testing."
+    },
+    {
+      "id": "ST-05",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Recurrent neural networks are designed to handle sequential data by maintaining an internal hidden state. At each time step, the network takes the current input and the previous hidden state to produce an output and an updated state. This allows RNNs to capture temporal dependencies, making them suitable for tasks like language modeling and time series prediction.",
+      "text_b": "Transfer learning has become a dominant paradigm in deep learning, where models pre-trained on large datasets are fine-tuned for specific downstream tasks. BERT, for instance, is pre-trained on massive text corpora using masked language modeling and can then be adapted for sentiment analysis, question answering, or named entity recognition with relatively small task-specific datasets.",
+      "notes": "Both about deep learning but RNNs vs transfer learning."
+    },
+    {
+      "id": "ST-06",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Dijkstra's algorithm finds the shortest path from a single source node to all other nodes in a weighted graph with non-negative edge weights. It maintains a priority queue of unvisited nodes and greedily selects the node with the smallest tentative distance at each step. The algorithm's time complexity with a binary heap is O((V + E) log V).",
+      "text_b": "Dynamic programming solves complex problems by breaking them into overlapping subproblems and storing intermediate results. The knapsack problem is a classic example where items with different weights and values must be selected to maximize total value within a weight capacity. Both top-down memoization and bottom-up tabulation approaches achieve polynomial time complexity by avoiding redundant computations.",
+      "notes": "Both about algorithms but Dijkstra vs dynamic programming."
+    },
+    {
+      "id": "ST-07",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Containerization with Docker packages applications and their dependencies into lightweight, portable units that run consistently across environments. A Dockerfile defines the build steps, and images are stored in registries like Docker Hub. Containers share the host kernel, making them more efficient than virtual machines while still providing process isolation.",
+      "text_b": "Kubernetes is an open-source container orchestration platform that automates deployment, scaling, and management of containerized applications. It organizes containers into logical units called pods, manages service discovery through internal DNS, and provides self-healing capabilities by automatically restarting failed containers. Horizontal pod autoscaling adjusts the number of replicas based on CPU utilization or custom metrics.",
+      "notes": "Both about containers but Docker basics vs Kubernetes orchestration."
+    },
+    {
+      "id": "ST-08",
+      "category": "same_topic_original",
+      "label": "not_plagiarized",
+      "text_a": "Natural language processing enables computers to understand and generate human language. Tokenization breaks text into words or subwords, and techniques like TF-IDF measure word importance in documents. Named entity recognition identifies proper nouns like person names, organizations, and locations within text, providing structured information extraction from unstructured documents.",
+      "text_b": "Large language models like GPT generate coherent text by predicting the next token in a sequence. They are trained on billions of parameters using the transformer architecture with self-attention mechanisms. Fine-tuning with reinforcement learning from human feedback aligns model outputs with user intent and reduces harmful or inaccurate responses in production deployments.",
+      "notes": "Both about NLP but traditional techniques vs LLMs."
+    },
+    {
+      "id": "DT-01",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "Photosynthesis is the biological process by which green plants convert sunlight, water, and carbon dioxide into glucose and oxygen. The light-dependent reactions occur in the thylakoid membranes where chlorophyll absorbs photons, while the Calvin cycle in the stroma uses the ATP and NADPH produced to fix carbon into organic molecules.",
+      "text_b": "Binary search trees maintain a sorted structure where each node's left subtree contains smaller values and the right subtree contains larger values. Search, insertion, and deletion operations have O(log n) average time complexity in balanced trees. Self-balancing variants like AVL trees and Red-Black trees guarantee logarithmic height through rotation operations after modifications.",
+      "notes": "Biology vs data structures — completely unrelated."
+    },
+    {
+      "id": "DT-02",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "The Renaissance was a cultural movement that began in Italy in the 14th century, characterized by renewed interest in classical Greek and Roman art, literature, and philosophy. Artists like Leonardo da Vinci and Michelangelo created masterworks that emphasized realism, perspective, and human anatomy, fundamentally transforming European artistic traditions.",
+      "text_b": "Compiler design involves several phases including lexical analysis, syntax analysis, semantic analysis, and code generation. The lexer converts source code into tokens, the parser builds an abstract syntax tree according to the grammar rules, and the code generator transforms the AST into machine code or intermediate representation for the target platform.",
+      "notes": "Art history vs compiler design."
+    },
+    {
+      "id": "DT-03",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "Tectonic plates are massive segments of Earth's lithosphere that float on the semi-fluid asthenosphere. Their movements cause earthquakes at transform boundaries, volcanic activity at convergent boundaries, and the formation of new oceanic crust at divergent boundaries. The theory of plate tectonics unified previously separate observations about continental drift and seafloor spreading.",
+      "text_b": "REST APIs follow a set of architectural constraints including stateless communication, uniform interfaces, and resource-based URLs. Each resource is identified by a URI, and standard HTTP methods map to CRUD operations. Proper API design includes versioning, pagination for large collections, and meaningful error responses with appropriate HTTP status codes.",
+      "notes": "Geology vs API design."
+    },
+    {
+      "id": "DT-04",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "Supply chain management coordinates the flow of goods from raw material suppliers through manufacturing to end consumers. Just-in-time inventory systems minimize storage costs by receiving materials only as needed for production. Effective supply chain optimization reduces lead times, lowers operational costs, and improves customer satisfaction through reliable delivery schedules.",
+      "text_b": "Garbage collection in Java automatically reclaims memory occupied by objects that are no longer referenced. The JVM uses generational collection, dividing the heap into young and old generations based on object lifetime. Minor collections frequently clean the young generation, while major collections less frequently compact the old generation, balancing throughput and pause times.",
+      "notes": "Business operations vs JVM memory management."
+    },
+    {
+      "id": "DT-05",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "The human immune system consists of innate and adaptive components that work together to defend against pathogens. Innate immunity provides immediate, non-specific defense through physical barriers and phagocytes, while adaptive immunity generates targeted responses through T-cells and B-cells that produce specific antibodies. Immunological memory allows faster responses to previously encountered pathogens.",
+      "text_b": "MapReduce is a programming model for processing large datasets in parallel across a distributed cluster. The map function processes input key-value pairs to generate intermediate pairs, which are then shuffled and sorted before the reduce function aggregates them into final results. Hadoop's implementation handles fault tolerance by re-executing failed tasks on other nodes.",
+      "notes": "Immunology vs distributed computing."
+    },
+    {
+      "id": "DT-06",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "Quantum mechanics describes the behavior of matter and energy at atomic and subatomic scales. The wave-particle duality principle states that particles exhibit both wave-like and particle-like properties. Heisenberg's uncertainty principle establishes a fundamental limit on the precision with which certain pairs of physical properties, like position and momentum, can be simultaneously known.",
+      "text_b": "Object-oriented programming organizes code around objects that encapsulate data and behavior. The four pillars of OOP are encapsulation, inheritance, polymorphism, and abstraction. Design patterns like Singleton, Factory, and Observer provide reusable solutions to common software design problems, promoting code maintainability and flexibility in large-scale applications.",
+      "notes": "Quantum physics vs OOP."
+    },
+    {
+      "id": "DT-07",
+      "category": "different_topic",
+      "label": "not_plagiarized",
+      "text_a": "Classical music evolved through distinct periods including Baroque, Classical, Romantic, and Modern eras. Composers like Bach used intricate counterpoint in the Baroque period, while Beethoven bridged the Classical and Romantic periods with increasingly expressive and dramatic compositions. The development of the symphony orchestra expanded the range of tonal colors available to composers.",
+      "text_b": "Microservices architecture decomposes applications into small, independently deployable services that communicate through APIs. Each service owns its data store and can be developed, tested, and scaled independently. This approach contrasts with monolithic architecture where all components share a single codebase and database, making independent scaling and deployment difficult.",
+      "notes": "Music history vs software architecture."
+    }
+  ]
+}
