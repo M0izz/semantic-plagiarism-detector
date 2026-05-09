@@ -15,6 +15,8 @@ from matplotlib.figure import Figure
 import seaborn as sns
 from typing import Optional
 
+from utils.similarity import PLAGIARISM_THRESHOLD
+
 matplotlib.use("Agg")  # Non-interactive backend (safe for Streamlit / servers)
 
 
@@ -25,8 +27,6 @@ _CMAP = sns.diverging_palette(
     s=80, l=50, sep=10,
     as_cmap=True
 )
-
-PLAGIARISM_THRESHOLD = 0.75
 
 
 def plot_similarity_heatmap(

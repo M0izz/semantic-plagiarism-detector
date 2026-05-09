@@ -39,7 +39,7 @@ with st.sidebar:
 
     threshold = st.slider("Plagiarism Threshold", 0.50, 0.99,
                           value=PLAGIARISM_THRESHOLD, step=0.01,
-                          help="Cosine similarity above which a pair is flagged.")
+                          help="Cosine similarity above which a pair is flagged. (Recommended: 0.59 based on benchmark evaluation)")
     use_chunk_matrix = st.checkbox("Use chunk-level similarity matrix", value=False,
                                    help="Use MAX chunk-pair similarity instead of mean doc vectors.")
     faiss_top_k = st.slider("FAISS: matches per chunk", 1, 20, value=5,
@@ -107,6 +107,11 @@ with st.spinner("🧠 Processing PDFs, building embeddings and FAISS index…"):
     raw_texts, chunked_docs, embeddings, sim_df, chunk_sim_df, faiss_index, registry = \
         run_pipeline(file_bytes_dict)
 
+# Check for empty PDFs (e.g. scanned images with no OCR)
+empty_docs = [name for name, text in raw_texts.items() if not text.strip()]
+if empty_docs:
+    st.warning(f"⚠️ **Could not extract text from:** {', '.join(empty_docs)}. These might be scanned images or password-protected PDFs.")
+
 active_sim_df = chunk_sim_df if use_chunk_matrix else sim_df
 flags         = flag_plagiarism(active_sim_df, threshold=threshold)
 
@@ -145,6 +150,16 @@ with tab_warnings:
     if not flags:
         st.success("✅ No suspicious pairs found above the current threshold.")
     else:
+        flags_df = pd.DataFrame(flags)
+        st.download_button(
+            "⬇️ Download Plagiarism Report (CSV)",
+            flags_df.to_csv(index=False).encode("utf-8"),
+            "plagiarism_warnings.csv",
+            "text/csv",
+            use_container_width=True
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         for flag in flags:
             color = "#ff4b4b" if "High" in flag["severity"] else "#ffa500"
             with st.container(border=True):
