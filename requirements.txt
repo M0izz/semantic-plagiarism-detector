@@ -15,6 +15,7 @@ streamlit>=1.35.0               # Dashboard framework
 numpy>=1.26.0
 pandas>=2.2.0
 scikit-learn>=1.4.0             # cosine_similarity utility
+openpyxl>=3.1.0                 # Engine for exporting DataFrames to Excel
 
 # ── Visualisation ─────────────────────────────────────────────────────────────
 matplotlib>=3.8.0
