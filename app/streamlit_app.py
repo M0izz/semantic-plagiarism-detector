@@ -277,8 +277,28 @@ with tab_matrix:
     styled_df = active_sim_df.style.format("{:.4f}").map(_highlight)
     st.dataframe(styled_df,
                  use_container_width=True)
-    st.download_button("⬇️ Download CSV", active_sim_df.to_csv().encode("utf-8"),
-                       "similarity_matrix.csv", "text/csv")
+    
+    # Create two side-by-side columns for the download buttons
+    btn_col1, btn_col2 = st.columns(2)
+    
+    with btn_col1:
+        st.download_button("⬇️ Download CSV", active_sim_df.to_csv().encode("utf-8"),
+                           "similarity_matrix.csv", "text/csv", use_container_width=True)
+        
+    with btn_col2:
+        # Convert DataFrame to an Excel file format in memory using openpyxl
+        excel_buffer = _io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            active_sim_df.to_excel(writer, index=True, sheet_name='Similarity Matrix')
+        excel_data = excel_buffer.getvalue()
+        
+        st.download_button(
+            label="⬇️ Download Excel",
+            data=excel_data,
+            file_name="similarity_matrix.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
 
 # ══ TAB 4 ════════════════════════════════════════════════════════════════════
 with tab_heatmap:
