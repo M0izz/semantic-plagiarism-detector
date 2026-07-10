@@ -33,22 +33,122 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Authentication ────────────────────────────────────────────────────────────
-_CREDENTIALS = {"admin": "admin123", "teacher": "teach2024"}
+import bcrypt
+from dotenv import load_dotenv
+load_dotenv(os.path.join(_ROOT, ".env"))
+
+def _load_credentials() -> dict:
+    """Load CRED_<username>=<bcrypt_hash> pairs from .env."""
+    return {
+        k[5:].lower(): v
+        for k, v in os.environ.items()
+        if k.startswith("CRED_")
+    }
+
+def _check_password(username: str, password: str) -> bool:
+    creds = _load_credentials()
+    hashed = creds.get(username.lower())
+    if not hashed:
+        return False
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def _login_page():
-    st.title("🔍 Semantic Plagiarism Detector")
-    st.subheader("🔒 Login")
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Login", use_container_width=True)
-    if submitted:
-        if _CREDENTIALS.get(username) == password:
-            st.session_state["authenticated"] = True
-            st.session_state["username"] = username
-            st.rerun()
-        else:
-            st.error("Invalid username or password.")
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+        .stApp { background: radial-gradient(ellipse at 60% 20%, #1a1f35 0%, #0d1117 60%); min-height: 100vh; }
+        [data-testid="stSidebar"] { display: none; }
+        .block-container { padding: 0 !important; max-width: 100% !important; }
+        .stTextInput > label {
+            font-size: 0.75rem !important; font-weight: 600 !important;
+            color: #8b949e !important; text-transform: uppercase !important; letter-spacing: 0.6px !important;
+        }
+        .stTextInput > div > div > input {
+            background: rgba(13,17,23,0.9) !important;
+            border: 1px solid #30363d !important;
+            border-radius: 10px !important;
+            color: #e6edf3 !important;
+            font-size: 0.9rem !important;
+            padding: 11px 14px !important;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+        }
+        .stTextInput > div > div > input:hover { border-color: #484f58 !important; }
+        .stTextInput > div > div > input:focus {
+            border-color: #388bfd !important;
+            box-shadow: 0 0 0 3px rgba(56,139,253,0.2) !important;
+        }
+        .stFormSubmitButton > button {
+            width: 100% !important;
+            background: linear-gradient(135deg, #1d6feb 0%, #388bfd 100%) !important;
+            color: #fff !important; border: none !important;
+            border-radius: 10px !important; padding: 12px !important;
+            font-size: 0.92rem !important; font-weight: 600 !important;
+            margin-top: 8px !important;
+            transition: all 0.25s ease !important;
+            box-shadow: 0 4px 15px rgba(29,111,235,0.4) !important;
+        }
+        .stFormSubmitButton > button:hover {
+            background: linear-gradient(135deg, #1158c7 0%, #1d6feb 100%) !important;
+            box-shadow: 0 6px 24px rgba(29,111,235,0.6) !important;
+            transform: translateY(-2px) !important;
+        }
+        .stFormSubmitButton > button:active { transform: translateY(0) !important; }
+        .stAlert { border-radius: 10px !important; font-size: 0.83rem !important; }
+
+        /* ── Single card wrapping brand + form ── */
+        div[data-testid="stForm"] {
+            background: rgba(22,27,34,0.88) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(48,54,61,0.9) !important;
+            border-radius: 20px !important;
+            padding: 36px 30px 32px !important;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 20px 60px rgba(0,0,0,0.6) !important;
+            margin: 0 10px !important;
+        }
+
+        /* Centre the column that holds the form */
+        div[data-testid="column"]:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        st.markdown("""
+            <div style='text-align:center; margin-bottom:24px; padding-top:15vh;'>
+                <div style='display:inline-flex; align-items:center; gap:10px; justify-content:center;'>
+                    <span style='font-size:2rem; line-height:1;'>&#128269;</span>
+                    <span style='font-size:1.75rem; font-weight:700; color:#e6edf3; letter-spacing:-0.4px;'>Semantic Plagiarism Detector</span>
+                </div>
+                <div style='font-size:0.82rem; color:#6e7681; margin-top:6px;'>AI-powered academic integrity platform</div>
+            </div>
+        """, unsafe_allow_html=True)
+        with st.form("login_form"):
+            st.markdown("""
+                <div style='font-size:1.4rem; font-weight:700; color:#e6edf3; text-align:center;
+                            text-transform:uppercase; letter-spacing:2px; margin-bottom:24px;'>
+                    LOGIN
+                </div>
+                <div style='height:1px; background:linear-gradient(90deg,transparent,#30363d,transparent); margin-bottom:20px;'></div>
+            """, unsafe_allow_html=True)
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+            submitted = st.form_submit_button("Login", use_container_width=True)
+
+        if submitted:
+            if _check_password(username, password):
+                st.session_state["authenticated"] = True
+                st.session_state["username"] = username
+                st.rerun()
+            else:
+                st.error("Invalid username or password.")
 
 if not st.session_state.get("authenticated"):
     _login_page()
