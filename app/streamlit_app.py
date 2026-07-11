@@ -435,8 +435,11 @@ with tab_matrix:
 # ══ TAB 4 ═════════════════════════════════════════════════════════════════════
 with tab_heatmap:
     st.subheader("🗺️ Similarity Heatmap")
-    interactive = st.checkbox("Interactive mode (hover values)", value=True,
-                              help="Plotly chart with hover tooltips. Uncheck for static view.")
+    hm_col1, hm_col2 = st.columns(2)
+    with hm_col1:
+        interactive = st.checkbox("Interactive mode (hover values)", value=True,
+                                  help="Plotly chart with hover tooltips. Uncheck for static view.")
+
     if interactive:
         plotly_fig = plot_similarity_heatmap_plotly(
             active_sim_df, title="Document Semantic Similarity", threshold=threshold
@@ -451,10 +454,11 @@ with tab_heatmap:
         st.pyplot(fig, use_container_width=True)
 
     buf = _io.BytesIO()
-    plot_similarity_heatmap(
+    static_fig = plot_similarity_heatmap(
         active_sim_df, title="Document Semantic Similarity",
         threshold=threshold, annotate=True, dpi=200,
-    ).savefig(buf, format="png", dpi=200, bbox_inches="tight")
+    )
+    static_fig.savefig(buf, format="png", dpi=200, bbox_inches="tight")
     buf.seek(0)
     st.download_button("⬇️ Download High-Res PNG", buf, "heatmap.png", "image/png")
 

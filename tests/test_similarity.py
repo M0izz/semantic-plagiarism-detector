@@ -5,7 +5,8 @@ from utils.similarity import (
     document_similarity_matrix,
     chunk_max_similarity,
     chunk_similarity_matrix,
-    flag_plagiarism
+    flag_plagiarism,
+    find_most_similar_chunks,
 )
 
 @pytest.fixture
@@ -64,6 +65,44 @@ def test_chunk_similarity_matrix(dummy_embeddings):
     
     # Symmetric
     assert df.loc["doc_A", "doc_B"] == df.loc["doc_B", "doc_A"]
+
+def test_document_similarity_matrix_1d_embedding():
+    # Covers the elif emb.ndim == 1 branch (line 48)
+    emb_1d = np.array([1.0, 0.0, 0.0])
+    df = document_similarity_matrix({"doc_1d": emb_1d})
+    assert np.isclose(df.loc["doc_1d", "doc_1d"], 1.0)
+
+
+def test_document_similarity_matrix_empty_embedding():
+    # Covers the zero-vector fallback branch (line 50-51)
+    df = document_similarity_matrix({"empty": np.array([])})
+    assert df.shape == (1, 1)
+
+
+def test_find_most_similar_chunks_returns_top_pairs():
+    emb_a = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    emb_b = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    chunks_a = ["chunk a0", "chunk a1"]
+    chunks_b = ["chunk b0", "chunk b1"]
+    pairs = find_most_similar_chunks(chunks_a, chunks_b, emb_a, emb_b, top_k=2, threshold=0.5)
+    assert len(pairs) >= 1
+    assert pairs[0][0] == "chunk a0"
+    assert pairs[0][1] == "chunk b0"
+    assert pairs[0][2] > 0.5
+
+
+def test_find_most_similar_chunks_empty_embeddings():
+    # Covers the early-return branch (line 187)
+    result = find_most_similar_chunks([], [], np.array([]), np.array([]), top_k=3)
+    assert result == []
+
+
+def test_find_most_similar_chunks_threshold_filters():
+    emb_a = np.array([[1.0, 0.0, 0.0]])
+    emb_b = np.array([[0.0, 1.0, 0.0]])  # orthogonal → similarity 0.0
+    pairs = find_most_similar_chunks(["a"], ["b"], emb_a, emb_b, top_k=3, threshold=0.5)
+    assert pairs == []
+
 
 def test_flag_plagiarism():
     # Mock a similarity DataFrame
