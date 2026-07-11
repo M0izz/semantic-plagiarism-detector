@@ -12,13 +12,30 @@ cosine similarity reduces to the dot product, making this very fast.
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 # ── Threshold ──────────────────────────────────────────────────────────────────
 # Empirically determined optimal value via evaluation/evaluate.py (F1 = 1.0).
 # Previous arbitrary default was 0.75; data-driven analysis found 0.59 to be
 # the lowest threshold achieving perfect precision AND recall on the benchmark.
 PLAGIARISM_THRESHOLD = 0.59
+
+
+# ── Validation helpers ─────────────────────────────────────────────────────────
+
+def _validated_batch_size(batch_size: Optional[int]) -> Optional[int]:
+    """Return a safe integer batch size or None for unbatched execution."""
+    if batch_size is None:
+        return None
+    if isinstance(batch_size, bool):
+        raise ValueError("batch_size must be an integer")
+    if isinstance(batch_size, (float, np.floating)) and not float(batch_size).is_integer():
+        raise ValueError("batch_size must be an integer")
+    try:
+        size = int(batch_size)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("batch_size must be an integer") from exc
+    return size if size > 0 else None
 
 
 # ── Document-level similarity ──────────────────────────────────────────────────
@@ -34,9 +51,9 @@ def document_similarity_matrix(
 
     Args:
         doc_embeddings: Dict mapping doc name → embedding array (chunks × 384).
-        batch_size: Optional number of documents to compare at once. When set,
-            the similarity computation is carried out in smaller blocks to
-            reduce peak memory usage for larger datasets.
+        batch_size: Optional number of documents to compare per batch.
+            When set, the similarity computation is carried out in smaller blocks
+            to reduce peak memory usage for larger datasets.
 
     Returns:
         Symmetric pandas DataFrame with document names as index and columns.
@@ -59,23 +76,15 @@ def document_similarity_matrix(
 
     matrix = np.zeros((n, n))
     if doc_vectors:
-        stacked = np.vstack(doc_vectors)  # (N, 384)
-        if batch_size is None:
-            sim = cosine_similarity(stacked)  # (N, N)
-            matrix = np.clip(sim, 0.0, 1.0)  # Numerical safety
+        stacked = np.vstack(doc_vectors)           # (N, 384)
+        safe_batch_size = _validated_batch_size(batch_size)
+        if safe_batch_size is None:
+            sim = cosine_similarity(stacked)       # (N, N)
+            matrix = np.clip(sim, 0.0, 1.0)       # Numerical safety
         else:
-            try:
-                batch_size = int(batch_size)
-            except (TypeError, ValueError) as exc:
-                raise ValueError("batch_size must be a positive integer") from exc
-
-            if batch_size <= 0:
-                raise ValueError("batch_size must be a positive integer")
-
-            for start in range(0, n, batch_size):
-                end = min(start + batch_size, n)
-                batch = stacked[start:end]
-                sim = cosine_similarity(batch, stacked)  # (batch_size, N)
+            for start in range(0, n, safe_batch_size):
+                end = min(start + safe_batch_size, n)
+                sim = cosine_similarity(stacked[start:end], stacked)
                 matrix[start:end] = np.clip(sim, 0.0, 1.0)
 
     df = pd.DataFrame(matrix, index=doc_names, columns=doc_names)
@@ -98,7 +107,7 @@ def chunk_max_similarity(
     Args:
         emb_a: Chunk embeddings for document A  (Na × 384)
         emb_b: Chunk embeddings for document B  (Nb × 384)
-        batch_size: Optional number of rows/columns to score at a time.
+        batch_size: Optional number of rows/columns to compare per batch.
             When set, the comparison is processed in smaller blocks to lower
             peak memory usage for large chunk sets.
 
@@ -108,30 +117,20 @@ def chunk_max_similarity(
     if emb_a.size == 0 or emb_b.size == 0:
         return 0.0
 
-    if batch_size is None:
+    safe_batch_size = _validated_batch_size(batch_size)
+    if safe_batch_size is None:
         sim_matrix = cosine_similarity(emb_a, emb_b)    # (Na, Nb)
         return float(np.max(sim_matrix))
 
-    try:
-        batch_size = int(batch_size)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("batch_size must be a positive integer") from exc
-
-    if batch_size <= 0:
-        raise ValueError("batch_size must be a positive integer")
-
     max_score = 0.0
-    for start_a in range(0, emb_a.shape[0], batch_size):
-        end_a = min(start_a + batch_size, emb_a.shape[0])
-        block_a = emb_a[start_a:end_a]
-        for start_b in range(0, emb_b.shape[0], batch_size):
-            end_b = min(start_b + batch_size, emb_b.shape[0])
-            block_b = emb_b[start_b:end_b]
-            sim_matrix = cosine_similarity(block_a, block_b)
+    for start_a in range(0, emb_a.shape[0], safe_batch_size):
+        end_a = min(start_a + safe_batch_size, emb_a.shape[0])
+        for start_b in range(0, emb_b.shape[0], safe_batch_size):
+            end_b = min(start_b + safe_batch_size, emb_b.shape[0])
+            sim_matrix = cosine_similarity(emb_a[start_a:end_a], emb_b[start_b:end_b])
             max_score = max(max_score, float(np.max(sim_matrix)))
             if max_score >= 1.0:
                 return max_score
-
     return max_score
 
 
@@ -147,7 +146,7 @@ def chunk_similarity_matrix(
 
     Args:
         doc_embeddings: Dict mapping doc name → embedding array.
-        batch_size: Optional number of chunks to compare at a time for each
+        batch_size: Optional number of chunks to compare per batch for each
             document pair.
 
     Returns:
