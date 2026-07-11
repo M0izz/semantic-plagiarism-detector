@@ -43,9 +43,14 @@ def test_chunk_max_similarity(dummy_embeddings):
 
 
 def test_chunk_max_similarity_supports_batching(dummy_embeddings):
-    unbatched = chunk_max_similarity(dummy_embeddings["doc_A"], dummy_embeddings["doc_B"])
-    batched = chunk_max_similarity(dummy_embeddings["doc_A"], dummy_embeddings["doc_B"], batch_size=1)
-    assert np.isclose(batched, unbatched)
+    sim_unbatched = chunk_max_similarity(dummy_embeddings["doc_A"], dummy_embeddings["doc_B"])
+    sim_batched = chunk_max_similarity(dummy_embeddings["doc_A"], dummy_embeddings["doc_B"], batch_size=1)
+    assert np.isclose(sim_batched, sim_unbatched)
+
+
+def test_chunk_max_similarity_rejects_invalid_batch_size(dummy_embeddings):
+    with pytest.raises(ValueError, match="batch_size must be an integer"):
+        chunk_max_similarity(dummy_embeddings["doc_A"], dummy_embeddings["doc_B"], batch_size=0.5)
 
 
 def test_document_similarity_matrix(dummy_embeddings):
@@ -59,7 +64,6 @@ def test_document_similarity_matrix(dummy_embeddings):
 def test_document_similarity_matrix_accepts_batch_size_basic(dummy_embeddings):
     df = document_similarity_matrix(dummy_embeddings, batch_size=2)
     assert isinstance(df, pd.DataFrame)
-    assert np.isclose(df.loc["doc_A", "doc_A"], 1.0)
     
     # Diagonal should be ~1.0
     assert np.isclose(df.loc["doc_A", "doc_A"], 1.0)
@@ -73,6 +77,11 @@ def test_document_similarity_matrix_accepts_batch_size(dummy_embeddings):
     batched = document_similarity_matrix(dummy_embeddings, batch_size=2)
     assert isinstance(batched, pd.DataFrame)
     assert np.allclose(unbatched.values, batched.values)
+
+
+def test_document_similarity_matrix_rejects_invalid_batch_size(dummy_embeddings):
+    with pytest.raises(ValueError, match="batch_size must be an integer"):
+        document_similarity_matrix(dummy_embeddings, batch_size=0.5)
 
 
 def test_chunk_similarity_matrix(dummy_embeddings):

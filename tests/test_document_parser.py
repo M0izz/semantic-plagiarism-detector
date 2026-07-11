@@ -37,6 +37,28 @@ def test_extract_from_pdf_bytes():
     assert isinstance(result, str)
 
 
+def test_extract_from_pdf_filters_repeated_headers_page_numbers_and_whitespace():
+    page_one = MagicMock()
+    page_one.extract_text.return_value = "Research Report\n\nIntroduction\nPage 1"
+    page_two = MagicMock()
+    page_two.extract_text.return_value = "Research Report\n\nBody content\nPage 2"
+
+    fake_pdf = MagicMock()
+    fake_pdf.pages = [page_one, page_two]
+    fake_pdf.__enter__.return_value = fake_pdf
+    fake_pdf.__exit__.return_value = False
+
+    with patch("utils.document_parser.pdfplumber.open", return_value=fake_pdf):
+        result = extract_text_from_pdf(io.BytesIO(b"fake-pdf"))
+
+    assert "Research Report" not in result
+    assert "Page 1" not in result
+    assert "Page 2" not in result
+    assert "Introduction" in result
+    assert "Body content" in result
+    assert "\n\n\n" not in result
+
+
 def test_extract_from_docx_bytes():
     docx_bytes = _make_docx_bytes("Hello DOCX")
     result = extract_text_from_docx(docx_bytes)

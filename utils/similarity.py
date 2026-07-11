@@ -21,7 +21,7 @@ from typing import Dict, List, Optional, Tuple
 PLAGIARISM_THRESHOLD = 0.59
 
 
-# ── Document-level similarity ──────────────────────────────────────────────────
+# ── Validation helpers ─────────────────────────────────────────────────────────
 
 def _validated_batch_size(batch_size: Optional[int]) -> Optional[int]:
     """Return a safe integer batch size or None for unbatched execution."""
@@ -38,6 +38,8 @@ def _validated_batch_size(batch_size: Optional[int]) -> Optional[int]:
     return size if size > 0 else None
 
 
+# ── Document-level similarity ──────────────────────────────────────────────────
+
 def document_similarity_matrix(
     doc_embeddings: Dict[str, np.ndarray],
     batch_size: Optional[int] = None,
@@ -50,6 +52,8 @@ def document_similarity_matrix(
     Args:
         doc_embeddings: Dict mapping doc name → embedding array (chunks × 384).
         batch_size: Optional number of documents to compare per batch.
+            When set, the similarity computation is carried out in smaller blocks
+            to reduce peak memory usage for larger datasets.
 
     Returns:
         Symmetric pandas DataFrame with document names as index and columns.
@@ -104,6 +108,8 @@ def chunk_max_similarity(
         emb_a: Chunk embeddings for document A  (Na × 384)
         emb_b: Chunk embeddings for document B  (Nb × 384)
         batch_size: Optional number of rows/columns to compare per batch.
+            When set, the comparison is processed in smaller blocks to lower
+            peak memory usage for large chunk sets.
 
     Returns:
         Maximum cosine similarity across all chunk pairs (float 0–1).
@@ -140,7 +146,8 @@ def chunk_similarity_matrix(
 
     Args:
         doc_embeddings: Dict mapping doc name → embedding array.
-        batch_size: Optional number of chunks to compare per batch.
+        batch_size: Optional number of chunks to compare per batch for each
+            document pair.
 
     Returns:
         Symmetric pandas DataFrame with max-chunk similarity values.
