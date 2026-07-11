@@ -1,13 +1,17 @@
 """
 pdf_reader.py
 -------------
-Handles extraction of raw text from uploaded PDF files using PyPDF2.
+Handles extraction of raw text from uploaded PDF files using pypdf.
 Supports both file paths and file-like objects (e.g., Streamlit UploadedFile).
 """
 
-import PyPDF2
 import io
 from typing import Union
+
+try:
+    import pypdf as PyPDF2
+except ImportError:  # pragma: no cover - fallback for older environments
+    import PyPDF2
 
 
 def extract_text_from_pdf(file: Union[str, bytes, io.BytesIO]) -> str:

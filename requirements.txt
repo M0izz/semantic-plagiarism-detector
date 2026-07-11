@@ -6,7 +6,7 @@ sentence-transformers>=2.7.0    # Transformer embeddings (all-MiniLM-L6-v2)
 torch>=2.0.0                    # PyTorch backend for sentence-transformers
 
 # ── PDF Parsing ───────────────────────────────────────────────────────────────
-PyPDF2>=3.0.1                   # Extract text from PDF files
+pypdf>=5.0.0                    # Extract text from PDF files
 
 # ── Web UI ────────────────────────────────────────────────────────────────────
 streamlit>=1.35.0               # Dashboard framework

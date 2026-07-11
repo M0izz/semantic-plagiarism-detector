@@ -27,7 +27,7 @@ similarity, and **FAISS vector search**.
 | Feature | Detail |
 |---|---|
 | **Semantic understanding** | Detects paraphrased plagiarism, not just copy-paste |
-| **Transformer embeddings** | `all-MiniLM-L6-v2` (384-dim, fast, accurate) |
+| **Transformer embeddings** | `paraphrase-multilingual-MiniLM-L12-v2` (384-dim, multilingual, accurate) |
 | **FAISS vector search** | Adaptive indexing (Flat / IVF) — scales to thousands of assignments |
 | **Paragraph chunking** | Detects localised section-level plagiarism |
 | **Similarity matrix** | Full N×N pairwise document comparison; downloadable as CSV or Excel |
@@ -132,7 +132,7 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-> **Note:** The first run will download the `all-MiniLM-L6-v2` model (~90 MB).
+> **Note:** The first run will download the `paraphrase-multilingual-MiniLM-L12-v2` model (~420 MB).
 > Subsequent runs use the local cache.
 
 ### 4. Launch the Streamlit dashboard
@@ -173,7 +173,7 @@ Additional users can be created from the **User Management** page (admin only).
 | FAISS matches per chunk | `5` | Nearest neighbours retrieved per chunk |
 | Chunk min words | `20` | Paragraphs shorter than this are discarded |
 | Chunk max words | `200` | Longer paragraphs are sub-split at sentence boundaries |
-| Embedding model | `all-MiniLM-L6-v2` | Change in `utils/embedding_model.py` |
+| Embedding model | `paraphrase-multilingual-MiniLM-L12-v2` | Change in `utils/embedding_model.py` or set `SEMANTIC_PLAGIARISM_MODEL` |
 | Batch size | `64` | Tune for GPU/CPU in `embedding_model.py` |
 
 ---
@@ -188,7 +188,7 @@ Text is split on blank lines into chunks of 20–200 words.
 Short chunks (headers, captions) are discarded; long chunks are sub-split at sentence boundaries.
 
 ### Step 3 – Embedding
-Each chunk is passed through `all-MiniLM-L6-v2`:
+Each chunk is passed through `paraphrase-multilingual-MiniLM-L12-v2`:
 - Output: 384-dimensional, L2-normalised vector
 - L2 normalisation means cosine similarity = dot product (fast)
 

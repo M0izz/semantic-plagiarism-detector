@@ -1,13 +1,13 @@
 import io
 import pytest
-import PyPDF2
+import pypdf
 from unittest.mock import MagicMock, patch
 from utils.pdf_reader import extract_text_from_pdf, extract_texts_from_pdfs
 
 
 def _make_pdf_bytes(text: str) -> bytes:
     """Create a minimal in-memory PDF containing the given text."""
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     page = writer.add_blank_page(width=200, height=200)
     buf = io.BytesIO()
     writer.write(buf)
@@ -16,7 +16,7 @@ def _make_pdf_bytes(text: str) -> bytes:
 
 def test_extract_from_bytesio():
     # Build a real single-page PDF and confirm we get a string back
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
     buf = io.BytesIO()
     writer.write(buf)
@@ -26,7 +26,7 @@ def test_extract_from_bytesio():
 
 
 def test_extract_from_bytes():
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
     buf = io.BytesIO()
     writer.write(buf)
@@ -35,7 +35,7 @@ def test_extract_from_bytes():
 
 
 def test_extract_from_filepath(tmp_path):
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
     pdf_path = tmp_path / "test.pdf"
     with open(pdf_path, "wb") as f:
@@ -50,7 +50,7 @@ def test_extract_returns_empty_on_error():
 
 
 def test_extract_texts_from_pdfs_uses_name_attribute():
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
     buf = io.BytesIO()
     writer.write(buf)
@@ -76,7 +76,7 @@ def test_extract_texts_from_pdfs_fallback_name():
 
 
 def test_extract_texts_from_pdfs_string_path(tmp_path):
-    writer = PyPDF2.PdfWriter()
+    writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
     pdf_path = tmp_path / "sample.pdf"
     with open(pdf_path, "wb") as f:
