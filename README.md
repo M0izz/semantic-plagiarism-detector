@@ -30,12 +30,14 @@ similarity, and **FAISS vector search**.
 | **Transformer embeddings** | `all-MiniLM-L6-v2` (384-dim, fast, accurate) |
 | **FAISS vector search** | Adaptive indexing (Flat / IVF) — scales to thousands of assignments |
 | **Paragraph chunking** | Detects localised section-level plagiarism |
-| **Similarity matrix** | Full N×N pairwise document comparison |
-| **Heatmap visualisation** | Green–Red heatmap with flagged-pair borders |
+| **Similarity matrix** | Full N×N pairwise document comparison; downloadable as CSV or Excel |
+| **Interactive heatmap** | Plotly heatmap with hover tooltips; toggle to static Seaborn view |
 | **Pair drill-down** | See exactly which paragraphs match |
 | **Custom text query** | Paste any snippet to search against all uploaded assignments |
+| **Authentication** | Login system with role-based access (admin / teacher) |
+| **User management** | Admin can create, reset passwords, and delete users |
 | **Streamlit dashboard** | Clean, teacher-friendly web interface |
-| **Configurable threshold** | Adjustable via sidebar slider (default 0.75) |
+| **Configurable threshold** | Adjustable via sidebar slider (default 0.59) |
 
 ---
 
@@ -70,8 +72,9 @@ similarity, and **FAISS vector search**.
 | `utils/embedding_model.py` | Generate L2-normalised embeddings via SentenceTransformers |
 | `utils/faiss_index.py` | Build FAISS index (Flat/IVF); chunk-level search across all documents |
 | `utils/similarity.py` | Compute cosine similarity matrices; flag plagiarism |
-| `utils/heatmap.py` | Render Seaborn heatmaps (document-level & chunk-level) |
-| `app/streamlit_app.py` | Streamlit UI: upload, warnings, FAISS search, heatmap, drill-down |
+| `utils/heatmap.py` | Render Seaborn/Plotly heatmaps (document-level & chunk-level) |
+| `utils/auth.py` | SQLite-backed authentication with bcrypt password hashing |
+| `app/streamlit_app.py` | Streamlit UI: login, upload, warnings, FAISS search, heatmap, drill-down |
 
 ---
 
@@ -82,15 +85,18 @@ semantic_plagiarism_detector/
 │
 ├── utils/
 │   ├── __init__.py           # Package exports
+│   ├── auth.py               # SQLite auth (bcrypt hashing, role management)
 │   ├── pdf_reader.py         # PDF text extraction
 │   ├── text_chunking.py      # Paragraph-level chunking
 │   ├── embedding_model.py    # Sentence Transformer wrapper
 │   ├── faiss_index.py        # FAISS vector index (Flat / IVF)
 │   ├── similarity.py         # Cosine similarity & plagiarism flagging
-│   └── heatmap.py            # Matplotlib/Seaborn visualisations
+│   └── heatmap.py            # Matplotlib/Seaborn/Plotly visualisations
 │
 ├── app/
-│   └── streamlit_app.py      # Main web dashboard (5 tabs)
+│   └── streamlit_app.py      # Main web dashboard (login + 5 tabs)
+│
+├── users.db                  # SQLite user store (auto-created on first run)
 │
 ├── evaluation/
 │   ├── benchmark_dataset.json  # 25 labelled text pairs
@@ -137,16 +143,24 @@ streamlit run app/streamlit_app.py
 
 The app opens at **http://localhost:8501**.
 
+### Default credentials
+
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin123` | Admin — full access + user management |
+
+Additional users can be created from the **User Management** page (admin only).
+
 ---
 
 ## 🖥️ Dashboard — 5 Tabs
 
 | Tab | What it shows |
 |---|---|
-| **Plagiarism Warnings** | All flagged pairs sorted by severity (High / Medium) |
+| **Plagiarism Warnings** | All flagged pairs sorted by severity (High / Medium); downloadable CSV |
 | **FAISS Chunk Search** | Chunk-level ANN search across all documents; custom text query box |
-| **Similarity Matrix** | Full N×N similarity table; downloadable as CSV |
-| **Heatmap** | Visual colour matrix with red borders on flagged pairs; downloadable PNG |
+| **Similarity Matrix** | Full N×N similarity table; downloadable as CSV or Excel |
+| **Heatmap** | Interactive Plotly heatmap (hover values) or static Seaborn view; downloadable PNG |
 | **Pair Drill-Down** | Select any two docs to see which specific paragraphs match |
 
 ---
@@ -155,7 +169,7 @@ The app opens at **http://localhost:8501**.
 
 | Setting | Default | Description |
 |---|---|---|
-| Plagiarism threshold | `0.75` | Pairs above this score are flagged |
+| Plagiarism threshold | `0.59` | Pairs above this score are flagged |
 | FAISS matches per chunk | `5` | Nearest neighbours retrieved per chunk |
 | Chunk min words | `20` | Paragraphs shorter than this are discarded |
 | Chunk max words | `200` | Longer paragraphs are sub-split at sentence boundaries |
@@ -235,11 +249,15 @@ Results are **cached by Streamlit** — re-uploading the same files is instant.
 | `faiss-cpu` | Vector search (exact / approximate nearest-neighbour) |
 | `PyPDF2` | PDF text extraction |
 | `streamlit` | Web dashboard |
+| `bcrypt` | Password hashing for authentication |
+| `python-dotenv` | Load environment variables from `.env` |
 | `numpy` | Numerical operations |
 | `pandas` | Similarity DataFrame |
 | `scikit-learn` | `cosine_similarity` utility |
-| `seaborn` | Heatmap styling |
+| `plotly` | Interactive heatmap with hover tooltips |
+| `seaborn` | Static heatmap styling |
 | `matplotlib` | Figure rendering |
+| `openpyxl` | Excel export for similarity matrix |
 
 ---
 
