@@ -49,6 +49,26 @@ def test_extract_returns_empty_on_error():
     assert result == ""
 
 
+def test_extract_text_filters_repeated_headers_page_numbers_and_whitespace():
+    page_one = MagicMock()
+    page_one.extract_text.return_value = "Research Report\n\nIntroduction\nPage 1"
+    page_two = MagicMock()
+    page_two.extract_text.return_value = "Research Report\n\nBody content\nPage 2"
+
+    fake_reader = MagicMock()
+    fake_reader.pages = [page_one, page_two]
+
+    with patch("utils.pdf_reader.PyPDF2.PdfReader", return_value=fake_reader):
+        result = extract_text_from_pdf(io.BytesIO(b"fake-pdf"))
+
+    assert "Research Report" not in result
+    assert "Page 1" not in result
+    assert "Page 2" not in result
+    assert "Introduction" in result
+    assert "Body content" in result
+    assert "\n\n\n" not in result
+
+
 def test_extract_texts_from_pdfs_uses_name_attribute():
     writer = pypdf.PdfWriter()
     writer.add_blank_page(width=200, height=200)
