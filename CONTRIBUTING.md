@@ -39,18 +39,45 @@ pip install -r requirements.txt
 
 ## Pull Requests
 
-- Reference the issue number.
-- Add the **ECSoC26** label.
-- Describe what you've changed.
-- Include screenshots if UI changes are involved.
+## Description
+
+Briefly describe what this PR adds or improves.
+
+- `path/to/file1` — What was added/changed.
+- `path/to/file2` — What was added/changed.
+- `path/to/file3` — What was added/changed.
+- `path/to/file4` — What was added/changed.
+
+**Result:**
+Summarize the outcome (e.g., tests passed, feature completed, performance improved, bug fixed).
+
+---
+
+## Related Issue
+
+Fixes #<issue_number>
+
+---
+
+## Checklist
+
+- [x] Code tested
+- [x] Documentation updated (if applicable)
+- [x] No breaking changes
+- [x] Added `ECSoC26` label (if applicable)
+
+---
+
+## Screenshots / Test Results (Optional)
+
+- Add screenshots (if UI changes).
+- Include test results, coverage, benchmark, or logs (if applicable).
 
 Example:
 
-```
-Fixes #12
-
-Added semantic similarity score visualization.
-```
+- **Tests:** 40 passed, 0 failed
+- **Coverage:** 84%
+- **Performance:** ~25% faster than previous implementation
 
 ---
 
