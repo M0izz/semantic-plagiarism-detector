@@ -40,7 +40,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from utils.embedding_model import embed_chunks
+from src.core.embedding_model import embed_chunks
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 RESULTS_DIR = Path(__file__).parent / "results"

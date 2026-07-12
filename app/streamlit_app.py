@@ -10,22 +10,22 @@ import streamlit as st
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import Any
 
-from utils.document_parser import extract_text
-from utils.text_chunking   import chunk_documents, chunk_document
-from utils.embedding_model import embed_documents, embed_chunks
-from utils.similarity      import (
+from src.core.document_parser import extract_text
+from src.core.text_chunking   import chunk_documents, chunk_document
+from src.core.embedding_model import embed_documents, embed_chunks
+from src.core.similarity      import (
     document_similarity_matrix, flag_plagiarism,
     find_most_similar_chunks, PLAGIARISM_THRESHOLD,
 )
-from utils.heatmap     import plot_similarity_heatmap, plot_similarity_heatmap_plotly, plot_chunk_similarity_comparison
-from utils.faiss_index import build_index, find_plagiarised_chunks, search_similar_chunks, build_index_from_matrix
-from utils.auth        import init_db, verify_user, get_user_role, get_all_users, add_user, delete_user, update_password
-from utils.corpus_db   import (
+from src.visualization.heatmap     import plot_similarity_heatmap, plot_similarity_heatmap_plotly, plot_chunk_similarity_comparison
+from src.core.faiss_index import build_index, find_plagiarised_chunks, search_similar_chunks, build_index_from_matrix
+from src.db.auth        import init_db, verify_user, get_user_role, get_all_users, add_user, delete_user, update_password
+from src.db.corpus_db   import (
     init_corpus_db, add_document, get_document_by_hash, get_all_documents,
     add_chunks, get_chunk_registry, get_all_embeddings, delete_document, clear_all_data
 )
-from utils.network_graph import plot_similarity_network
-from utils.translator import translate_text
+from src.visualization.network_graph import plot_similarity_network
+from src.core.translator import translate_text
 
 @st.cache_resource
 def _init_db_once():
@@ -151,7 +151,7 @@ if "faiss_index" not in st.session_state or "registry" not in st.session_state:
 
 def compute_matrices_from_db():
     import sqlite3
-    from utils.corpus_db import _DB_PATH
+    from src.db.corpus_db import _DB_PATH
     
     conn = sqlite3.connect(_DB_PATH)
     rows = conn.execute("SELECT filename, embedding FROM chunks").fetchall()
@@ -188,7 +188,7 @@ def compute_matrices_from_db():
 
 def get_all_raw_texts():
     import sqlite3
-    from utils.corpus_db import _DB_PATH
+    from src.db.corpus_db import _DB_PATH
     
     conn = sqlite3.connect(_DB_PATH)
     rows = conn.execute("SELECT filename, chunk_text FROM chunks ORDER BY filename, chunk_index").fetchall()
@@ -204,7 +204,7 @@ def get_all_raw_texts():
 
 def get_all_chunk_texts():
     import sqlite3
-    from utils.corpus_db import _DB_PATH
+    from src.db.corpus_db import _DB_PATH
     
     conn = sqlite3.connect(_DB_PATH)
     rows = conn.execute("SELECT filename, chunk_text FROM chunks ORDER BY filename, chunk_index").fetchall()
@@ -541,7 +541,7 @@ with tab_faiss:
     query_text = st.text_area("Paste a text snippet:", height=120,
                               placeholder="Paste a paragraph from a suspected plagiarised source…")
     if st.button("🔍 Search Assignments", key="custom_query") and query_text.strip():
-        from utils.embedding_model import embed_chunks
+        from src.core.embedding_model import embed_chunks
         with st.spinner("Embedding query and searching…"):
             query_vec = embed_chunks([query_text.strip()])[0]
             results   = search_similar_chunks(query_vec, faiss_index, registry,
@@ -753,7 +753,7 @@ with tab_corpus:
     else:
         # Create a table showing stats
         table_data = []
-        from utils.corpus_db import get_document_chunks_count
+        from src.db.corpus_db import get_document_chunks_count
         for d in docs:
             n_chunks = get_document_chunks_count(d["filename"])
             table_data.append({
