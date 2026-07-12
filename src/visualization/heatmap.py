@@ -18,7 +18,7 @@ from typing import Optional
 
 matplotlib.use("Agg")
 
-from utils.similarity import PLAGIARISM_THRESHOLD
+from src.core.similarity import PLAGIARISM_THRESHOLD
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
 # RdYlGn_r: Red (high similarity / risk) → Yellow → Green (low similarity)
