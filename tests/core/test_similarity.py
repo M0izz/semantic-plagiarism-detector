@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import pandas as pd
-from utils.similarity import (
+from src.core.similarity import (
     document_similarity_matrix,
     chunk_max_similarity,
     chunk_similarity_matrix,

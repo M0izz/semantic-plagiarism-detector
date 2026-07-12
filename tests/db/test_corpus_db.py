@@ -1,7 +1,7 @@
 import pytest
 import os
 import numpy as np
-from utils.corpus_db import (
+from src.db.corpus_db import (
     init_corpus_db,
     add_document,
     get_document_by_hash,

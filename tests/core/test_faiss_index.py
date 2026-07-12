@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import faiss
-from utils.faiss_index import (
+from src.core.faiss_index import (
     build_index,
     search_similar_chunks,
     find_plagiarised_chunks,

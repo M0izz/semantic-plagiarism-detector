@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import plotly.graph_objects as go
-from utils.network_graph import plot_similarity_network
+from src.visualization.network_graph import plot_similarity_network
 
 
 def test_plot_similarity_network_returns_plotly_figure():

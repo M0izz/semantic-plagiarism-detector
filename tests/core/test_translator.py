@@ -1,5 +1,5 @@
 import pytest
-from utils.translator import translate_text
+from src.core.translator import translate_text
 
 
 def test_translate_text_basic():

@@ -3,7 +3,7 @@ import pytest
 import pypdf
 import docx
 from unittest.mock import MagicMock, patch
-from utils.document_parser import (
+from src.core.document_parser import (
     extract_text,
     extract_texts,
     extract_text_from_pdf,

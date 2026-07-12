@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 from unittest.mock import patch, MagicMock
-import utils.embedding_model as embedding_model
-from utils.embedding_model import embed_chunks, embed_documents, get_document_embedding
+import src.core.embedding_model as embedding_model
+from src.core.embedding_model import embed_chunks, embed_documents, get_document_embedding
 
 
 def _mock_encode(texts, batch_size=64, show_progress_bar=False, normalize_embeddings=True):
