@@ -175,6 +175,46 @@ Additional users can be created from the **User Management** page (admin only).
 
 ---
 
+## OCR support for scanned PDFs
+
+Scanned and image-only PDFs are automatically detected page by page. Pages that
+do not contain enough embedded text are rendered with PyMuPDF and processed
+locally with Tesseract OCR. The extracted text then follows the same paragraph
+chunking, embedding, FAISS, and similarity pipeline as regular PDFs.
+
+### Python dependencies
+
+```bash
+python -m pip install pytesseract pymupdf pillow
+```
+
+### Tesseract system dependency
+
+Tesseract must also be installed on the operating system.
+
+On Windows, it is commonly installed at:
+
+```text
+C:\Program Files\Tesseract-OCR\tesseract.exe
+```
+
+When it is not available on PATH, set:
+
+```powershell
+$env:TESSERACT_CMD="C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
+Verify the installation:
+
+```powershell
+tesseract --version
+```
+
+OCR is performed locally; uploaded documents are not sent to an external OCR
+service.
+
+---
+
 ## 🖥️ Dashboard — 5 Tabs
 
 | Tab | What it shows |

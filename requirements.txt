@@ -27,3 +27,7 @@ openpyxl>=3.1.0                 # Engine for exporting DataFrames to Excel
 # ── Visualisation ─────────────────────────────────────────────────────────────
 matplotlib>=3.8.0
 seaborn>=0.13.0
+
+pytesseract>=0.3.13
+pymupdf>=1.24.0
+Pillow>=10.0.0

@@ -10,7 +10,7 @@ import streamlit as st
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import Any
 
-from src.core.document_parser import extract_text
+from src.core.document_parser import OCRDependencyError, extract_text
 from src.core.text_chunking   import chunk_documents, chunk_document
 from src.core.embedding_model import embed_documents, embed_chunks
 from src.core.similarity      import (
@@ -236,7 +236,12 @@ def process_new_files(uploaded_files):
                 continue
                 
             status.write(f"📖 Extracting text from {f.name}...")
-            text = extract_text(_io.BytesIO(file_bytes), f.name)
+            try:
+                text = extract_text(_io.BytesIO(file_bytes), f.name)
+            except OCRDependencyError as exc:
+                st.error(f"Could not OCR **{f.name}**: {exc}")
+                empty_docs.append(f.name)
+                continue
             if not text.strip():
                 empty_docs.append(f.name)
                 continue
